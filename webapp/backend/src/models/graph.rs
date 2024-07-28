@@ -1,5 +1,6 @@
 use sqlx::FromRow;
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
+use std::cmp::Ordering;
 
 #[derive(FromRow, Clone, Debug)]
 pub struct Node {
@@ -52,25 +53,60 @@ impl Graph {
 
     pub fn shortest_path(&self, from_node_id: i32, to_node_id: i32) -> i32 {
         let mut distances = HashMap::new();
-        distances.insert(from_node_id, 0);
+        let mut heap = BinaryHeap::new();
 
-        for _ in 0..self.nodes.len() {
-            for node_id in self.nodes.keys() {
-                if let Some(edges) = self.edges.get(node_id) {
-                    for edge in edges {
-                        let new_distance = distances
-                            .get(node_id)
-                            .and_then(|d: &i32| d.checked_add(edge.weight))
-                            .unwrap_or(i32::MAX);
-                        let current_distance = distances.get(&edge.node_b_id).unwrap_or(&i32::MAX);
-                        if new_distance < *current_distance {
-                            distances.insert(edge.node_b_id, new_distance);
-                        }
+        distances.insert(from_node_id, 0);
+        heap.push(State {
+            cost: 0,
+            node_id: from_node_id,
+        });
+
+        while let Some(State { cost, node_id }) = heap.pop() {
+            if node_id == to_node_id {
+                return cost;
+            }
+
+            if cost > *distances.get(&node_id).unwrap_or(&i32::MAX) {
+                continue;
+            }
+
+            if let Some(edges) = self.edges.get(&node_id) {
+                for edge in edges {
+                    let next = State {
+                        cost: cost + edge.weight,
+                        node_id: edge.node_b_id,
+                    };
+
+                    if next.cost < *distances.get(&next.node_id).unwrap_or(&i32::MAX) {
+                        heap.push(next);
+                        distances.insert(next.node_id, next.cost);
                     }
                 }
             }
         }
 
-        distances.get(&to_node_id).cloned().unwrap_or(i32::MAX)
+        i32::MAX
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct State {
+    cost: i32,
+    node_id: i32,
+}
+
+// The priority queue depends on `Ord`. We implement it so that the smallest cost has the highest priority.
+impl Ord for State {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Notice that the we flip the ordering on costs.
+        // In a min-heap, we want the smallest cost to be first. 
+        other.cost.cmp(&self.cost)
+    }
+}
+
+// `PartialOrd` needs to be implemented as well.
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
