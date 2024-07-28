@@ -105,12 +105,10 @@ impl<
         let (dispatcher_user_id, dispatcher_username) = match dispatcher {
             Some(dispatcher) => (
                 Some(dispatcher.user_id),
-    
-                    self.auth_repository
-                        .find_username_by_id(dispatcher.user_id)
-                        .await
-                        .unwrap(),
-               
+                self.auth_repository
+                    .find_username_by_id(dispatcher.user_id)
+                    .await
+                    .unwrap(),
             ),
             None => (None, None),
         };
@@ -127,12 +125,10 @@ impl<
         let (driver_user_id, driver_username) = match tow_truck {
             Some(tow_truck) => (
                 Some(tow_truck.driver_id),
-           
-                    self.auth_repository
-                        .find_username_by_id(tow_truck.driver_id)
-                        .await
-                        .unwrap(),
-                
+                self.auth_repository
+                    .find_username_by_id(tow_truck.driver_id)
+                    .await
+                    .unwrap(),
             ),
             None => (None, None),
         };
@@ -147,13 +143,13 @@ impl<
             id: order.id,
             client_id: order.client_id,
             client_username: client_username,
+            dispatcher_id: order.dispatcher_id,
             dispatcher_user_id,
             dispatcher_username,
+            tow_truck_id: order.tow_truck_id,
             driver_user_id,
             driver_username,
             area_id,
-            dispatcher_id: order.dispatcher_id,
-            tow_truck_id: order.tow_truck_id,
             status: order.status,
             node_id: order.node_id,
             car_value: order.car_value,
@@ -161,7 +157,6 @@ impl<
             completed_time: order.completed_time,
         })
     }
-
     pub async fn get_paginated_orders(
         &self,
         page: i32,

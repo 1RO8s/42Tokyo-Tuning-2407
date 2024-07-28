@@ -15,11 +15,20 @@ impl OrderRepositoryImpl {
     }
 }
 
+
 impl OrderRepository for OrderRepositoryImpl {
     async fn find_order_by_id(&self, id: i32) -> Result<Order, AppError> {
         let order = sqlx::query_as::<_, Order>(
-            "SELECT 
-                *
+            "SELECT
+                id,
+                client_id,
+                dispatcher_id,
+                tow_truck_id,
+                status,
+                node_id,
+                car_value,
+                order_time,
+                completed_time
             FROM
                 orders 
             WHERE
@@ -31,6 +40,7 @@ impl OrderRepository for OrderRepositoryImpl {
 
         Ok(order)
     }
+
 
     async fn update_order_status(&self, order_id: i32, status: &str) -> Result<(), AppError> {
         sqlx::query("UPDATE orders SET status = ? WHERE id = ?")
