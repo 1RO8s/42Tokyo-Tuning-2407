@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     container_name: backend
@@ -19,7 +21,7 @@ services:
       timeout: 10s
       retries: 10
       start_period: 600s
-    entrypoint: ["sh", "-c", "cargo watch -x run"]
+    entrypoint: ["sh", "-c", "chown -R $(id -u):$(id -g) /var/log && cargo watch -x run"]
 
   frontend:
     container_name: frontend
@@ -65,6 +67,7 @@ services:
       timeout: 30s
       retries: 10
       start_period: 300s
+    entrypoint: ["sh", "-c", "chown -R $(id -u):$(id -g) /var/log && docker-entrypoint.sh mysqld"]
 
   nginx:
     container_name: nginx
@@ -81,6 +84,7 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
+    entrypoint: ["sh", "-c", "chown -R $(id -u):$(id -g) /var/log && nginx -g 'daemon off;'"]
 
 networks:
   webapp-network:
